@@ -1,0 +1,40 @@
+.failed-content {
+  display: grid;
+  gap: 12px;
+  flex: 1 1 360px;
+}
+
+.reveal-form {
+  display: grid;
+  gap: 8px;
+}
+
+.reveal-form label {
+  color: #fecaca;
+  font-size: 14px;
+}
+
+.reveal-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.reveal-row input {
+  min-width: 0;
+  flex: 1 1 220px;
+  border: 1px solid #7f1d1d;
+  border-radius: 8px;
+  padding: 12px;
+  background: #2f1010;
+  color: #fff;
+}
+
+.reveal-row input::placeholder { color: #fca5a5; }
+
+.ai-reaction {
+  padding: 12px;
+  border: 1px solid #7f1d1d;
+  border-radius: 8px;
+  background: #2f1010;
+}
