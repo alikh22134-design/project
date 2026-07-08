@@ -5,8 +5,6 @@ import { Auth } from './components/Auth';
 import { supabase } from './lib/supabase';
 import CharacterGuessPage from './pages/CharacterGuessPage';
 
-const guestGameLimit = 2;
-const guestGamesUsedKey = 'guestGuessGamesUsedTest3';
 const ownerEmails = (import.meta.env.VITE_OWNER_EMAILS ?? '')
   .split(',')
   .map((email: string) => email.trim().toLowerCase())
@@ -27,10 +25,9 @@ export default function App() {
   const [loadingSession, setLoadingSession] = useState(true);
   const [authNotice, setAuthNotice] = useState('');
   const [showAdmin, setShowAdmin] = useState(false);
-  const [guest, setGuest] = useState(() => {
-    const gamesUsed = Number(localStorage.getItem(guestGamesUsedKey) || '0');
-    return gamesUsed < guestGameLimit;
-  });
+  const [guest, setGuest] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
 
   useEffect(() => {
     let mounted = true;
@@ -41,6 +38,8 @@ export default function App() {
       setSession(data.session);
       if (!data.session?.user) {
         enterAsGuest();
+      } else {
+        setShowAuth(false);
       }
       setLoadingSession(false);
     });
@@ -49,6 +48,8 @@ export default function App() {
       setSession(nextSession);
       if (!nextSession?.user) {
         enterAsGuest();
+      } else {
+        setShowAuth(false);
       }
       setLoadingSession(false);
     });
@@ -93,21 +94,15 @@ export default function App() {
   }, [session?.user?.id]);
 
   function enterAsGuest() {
-    const gamesUsed = Number(localStorage.getItem(guestGamesUsedKey) || '0');
-
-    if (gamesUsed >= guestGameLimit) {
-      setGuest(false);
-      setAuthNotice('Вы уже попробовали игру. Хотите создать аккаунт, чтобы продолжить?');
-      return;
-    }
-
     setAuthNotice('');
+    setShowAuth(false);
     setGuest(true);
   }
 
-  function endGuestAccess() {
+  function openAuth(mode: 'signin' | 'signup' = 'signup') {
+    setAuthMode(mode);
+    setShowAuth(true);
     setGuest(false);
-    setAuthNotice('Вы уже попробовали игру. Хотите создать аккаунт, чтобы продолжить?');
   }
 
   const userEmail = session?.user.email?.toLowerCase() ?? '';
@@ -117,14 +112,6 @@ export default function App() {
     userRole === 'admin' ||
     ownerEmails.includes(userEmail) ||
     adminEmails.includes(userEmail);
-  const shouldShowRegistrationPrompt =
-    !session?.user &&
-    !guest &&
-    Number(localStorage.getItem(guestGamesUsedKey) || '0') >= guestGameLimit;
-  const authPromptNotice = shouldShowRegistrationPrompt
-    ? 'Вы уже попробовали игру. Хотите создать аккаунт, чтобы продолжить?'
-    : authNotice;
-
   if (loadingSession) {
     return (
       <main className="auth-gate">
@@ -133,10 +120,15 @@ export default function App() {
     );
   }
 
-  if (!session?.user && !guest) {
+  if (!session?.user && (!guest || showAuth)) {
     return (
       <main className="auth-gate">
-        <Auth notice={authPromptNotice} session={session} />
+        <Auth
+          initialMode={authMode}
+          notice={authNotice}
+          onContinueWithoutAccount={enterAsGuest}
+          session={session}
+        />
       </main>
     );
   }
@@ -154,7 +146,7 @@ export default function App() {
       {showAdmin && isAdmin ? (
         <AdminPanel onClose={() => setShowAdmin(false)} />
       ) : (
-        <CharacterGuessPage isGuest={guest && !session?.user} onGuestLimitEnd={endGuestAccess} />
+        <CharacterGuessPage isGuest={guest && !session?.user} onOpenAuth={openAuth} />
       )}
     </>
   );

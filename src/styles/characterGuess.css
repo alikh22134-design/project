@@ -150,6 +150,11 @@
 }
 
 .guest-limit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
   max-width: 520px;
   margin: 0 auto;
   color: #e9d5ff;
@@ -161,6 +166,22 @@
 
 .guest-limit--blocked {
   color: #fda4af;
+}
+
+.guest-limit button {
+  border: 1px solid rgba(253, 164, 175, 0.45);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.5);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 12px;
+}
+
+.guest-limit button:hover {
+  border-color: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .start-host {

@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
@@ -29,23 +29,32 @@ function isLikelyRealEmail(value: string) {
 }
 
 type AuthProps = {
+  initialMode?: 'signin' | 'signup';
   isAdmin?: boolean;
   notice?: string;
+  onContinueWithoutAccount?: () => void;
   onOpenAdmin?: () => void;
   session: Session | null;
 };
 
 export function Auth({
+  initialMode = 'signin',
   isAdmin = false,
   notice = '',
+  onContinueWithoutAccount,
   onOpenAdmin,
   session,
 }: AuthProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setMode(initialMode);
+    setMessage('');
+  }, [initialMode]);
 
   async function signInWithGoogle() {
     setBusy(true);
@@ -171,6 +180,12 @@ export function Auth({
       </form>
 
       {(message || notice) && <p className="auth-message">{message || notice}</p>}
+
+      {onContinueWithoutAccount && (
+        <button className="auth-button auth-button--guest" disabled={busy} onClick={onContinueWithoutAccount} type="button">
+          Продолжить без аккаунта
+        </button>
+      )}
 
       <p className="auth-help">
         {mode === 'signin' ? 'Нет аккаунта?' : 'Уже есть аккаунт?'}

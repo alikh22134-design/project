@@ -33,6 +33,7 @@ type GuesserMode = 'questions' | 'freeform';
 
 const guestGameLimit = 2;
 const guestGamesUsedKey = 'guestGuessGamesUsedTest3';
+const registrationPromptSkippedKey = 'registrationPromptSkipped';
 const assistantModes: Array<{ id: AssistantMode; label: string }> = [
   { id: 'fast', label: 'Быстро' },
   { id: 'slow', label: 'Медленно' },
@@ -46,10 +47,10 @@ const guesserModes: Array<{ id: GuesserMode; label: string }> = [
 
 type CharacterGuessPageProps = {
   isGuest?: boolean;
-  onGuestLimitEnd?: () => void;
+  onOpenAuth?: (mode?: 'signin' | 'signup') => void;
 };
 
-export default function CharacterGuessPage({ isGuest = false, onGuestLimitEnd }: CharacterGuessPageProps) {
+export default function CharacterGuessPage({ isGuest = false, onOpenAuth }: CharacterGuessPageProps) {
   const [selectedMode, setSelectedMode] = useState<GameMode>('guesser');
   const [selectedGuesserMode, setSelectedGuesserMode] = useState<GuesserMode>('questions');
   const [activeMode, setActiveMode] = useState<GameMode | null>(null);
@@ -58,6 +59,9 @@ export default function CharacterGuessPage({ isGuest = false, onGuestLimitEnd }:
     return Number.isFinite(savedCount) ? savedCount : 0;
   });
   const [guestLimitMessage, setGuestLimitMessage] = useState('');
+  const [registrationPromptSkipped, setRegistrationPromptSkipped] = useState(() => {
+    return localStorage.getItem(registrationPromptSkippedKey) === 'true';
+  });
   const [messages, setMessages] = useState<ChatLine[]>([firstMessage]);
   const [guess, setGuess] = useState('');
   const [answerCount, setAnswerCount] = useState(0);
@@ -104,12 +108,6 @@ export default function CharacterGuessPage({ isGuest = false, onGuestLimitEnd }:
     error,
     guestLimitMessage,
   ]);
-
-  useEffect(() => {
-    if (isGuest && !activeMode && guestGamesUsed >= guestGameLimit) {
-      endGuestAccess();
-    }
-  }, [activeMode, guestGamesUsed, isGuest, onGuestLimitEnd]);
 
   useEffect(() => {
     if (
@@ -223,29 +221,25 @@ export default function CharacterGuessPage({ isGuest = false, onGuestLimitEnd }:
     setGuesserInput('');
   }
 
-  function endGuestAccess() {
-    setGuestLimitMessage('Вы уже попробовали игру. Хотите создать аккаунт, чтобы продолжить?');
-    window.setTimeout(() => {
-      onGuestLimitEnd?.();
-    }, 1800);
-  }
-
   function useGuestGame() {
     if (!isGuest) return true;
-
-    const gamesLeft = guestGameLimit - guestGamesUsed;
-
-    if (gamesLeft <= 0) {
-      endGuestAccess();
-      return false;
-    }
 
     const nextCount = guestGamesUsed + 1;
     localStorage.setItem(guestGamesUsedKey, String(nextCount));
     setGuestGamesUsed(nextCount);
-    setGuestLimitMessage(gamesLeft === 1 ? 'Можно сыграть ещё 1 раз без аккаунта.' : '');
+    setGuestLimitMessage(
+      nextCount >= guestGameLimit && !registrationPromptSkipped
+        ? 'Понравилась игра? Можно создать аккаунт, но это не обязательно.'
+        : '',
+    );
 
     return true;
+  }
+
+  function skipRegistrationPrompt() {
+    localStorage.setItem(registrationPromptSkippedKey, 'true');
+    setRegistrationPromptSkipped(true);
+    setGuestLimitMessage('');
   }
 
   function restartWithGuestLimit() {
@@ -288,11 +282,6 @@ export default function CharacterGuessPage({ isGuest = false, onGuestLimitEnd }:
   }
 
   function goHome() {
-    if (isGuest && guestGamesUsed >= guestGameLimit) {
-      endGuestAccess();
-      return;
-    }
-
     restart();
     resetAssistant();
     resetFreeformGuesser();
@@ -386,19 +375,11 @@ export default function CharacterGuessPage({ isGuest = false, onGuestLimitEnd }:
 
   function failGame() {
     if (loading || finished || failed) return;
-    if (isGuest && guestGamesUsed >= guestGameLimit) {
-      endGuestAccess();
-      return;
-    }
     setFailed(true);
   }
 
   function finishGame() {
     if (finished || failed) return;
-    if (isGuest && guestGamesUsed >= guestGameLimit) {
-      endGuestAccess();
-      return;
-    }
     setFinished(true);
   }
 
@@ -476,10 +457,22 @@ export default function CharacterGuessPage({ isGuest = false, onGuestLimitEnd }:
               ИИ угадыватель
             </button>
           </div>
-          <button className="play-button" disabled={isGuest && guestGamesUsed >= guestGameLimit} onClick={startSelectedMode} type="button">
+          <button className="play-button" onClick={startSelectedMode} type="button">
             Начать
           </button>
-          {guestLimitMessage && <p className="guest-limit guest-limit--blocked">{guestLimitMessage}</p>}
+          {isGuest && onOpenAuth && (
+            <button className="auth-link" onClick={() => onOpenAuth('signup')} type="button">
+              Создать аккаунт
+            </button>
+          )}
+          {guestLimitMessage && (
+            <div className="guest-limit guest-limit--blocked">
+              <span>{guestLimitMessage}</span>
+              <button onClick={skipRegistrationPrompt} type="button">
+                Продолжить без аккаунта
+              </button>
+            </div>
+          )}
         </section>
       </GameShell>
     );
@@ -652,7 +645,14 @@ export default function CharacterGuessPage({ isGuest = false, onGuestLimitEnd }:
             </button>
           ))}
         </div>
-        {guestLimitMessage && <p className="guest-limit guest-limit--blocked">{guestLimitMessage}</p>}
+        {guestLimitMessage && (
+          <div className="guest-limit guest-limit--blocked">
+            <span>{guestLimitMessage}</span>
+            <button onClick={skipRegistrationPrompt} type="button">
+              Продолжить без аккаунта
+            </button>
+          </div>
+        )}
 
         {finished ? (
           <div className="finish-card finish-card--success">
