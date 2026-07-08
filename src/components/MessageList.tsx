@@ -13,22 +13,34 @@ export default function MessageList({ messages, loading }: MessageListProps) {
     const element = messagesRef.current;
     if (!element) return;
 
-    element.scrollTop = element.scrollHeight;
+    const scrollToBottom = () => {
+      element.scrollTop = element.scrollHeight;
+    };
+
+    scrollToBottom();
+    const frame = window.requestAnimationFrame(scrollToBottom);
+    const timeout = window.setTimeout(scrollToBottom, 80);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timeout);
+    };
   }, [messages, loading]);
 
   return (
     <div className="messages" aria-live="polite" ref={messagesRef}>
       {messages.map((message, index) => (
         <div className={getMessageClass(message.author)} key={index}>
-          {message.author === 'ai' && <span className="chat-avatar" />}
           <div className={getBubbleClass(message.author, index)}>
-            {message.text}
+            {message.image && (
+              <img className="bubble-image" src={message.image.data} alt={message.image.name} />
+            )}
+            {message.text && <span>{message.text}</span>}
           </div>
         </div>
       ))}
       {loading && (
         <div className="message-row message-row--ai">
-          <span className="chat-avatar chat-avatar--thinking" />
           <div className="bubble bubble--ai">Думаю...</div>
         </div>
       )}

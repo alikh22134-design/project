@@ -13,15 +13,15 @@ export default function GuessResult({
 }: GuessResultProps) {
   return (
     <div className="guess-card">
-      <p>Моя догадка:</p>
+      <p>Я заглянул в твою мысль и выбираю:</p>
       <strong>{guess}</strong>
       {!disabled && (
         <div className="guess-actions">
           <button onClick={onCorrect} type="button">
-            Верно
+            Да, это он
           </button>
           <button className="ghost" onClick={onWrong} type="button">
-            Не угадал
+            Нет, не угадал
           </button>
         </div>
       )}

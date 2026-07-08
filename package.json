@@ -12,7 +12,8 @@
     "db:new": "supabase migration new",
     "db:push": "supabase db push",
     "ai:secret": "supabase secrets set",
-    "ai:deploy": "supabase functions deploy ai"
+    "ai:deploy": "supabase functions deploy ai",
+    "admin:deploy": "supabase functions deploy admin-users"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

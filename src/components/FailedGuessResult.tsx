@@ -24,20 +24,21 @@ export default function FailedGuessResult({
   return (
     <div className="finish-card finish-card--failed">
       <div className="failed-content">
-        <p>О нет, я не угадал. Я думал, что это {guess}.</p>
+        <p className="finish-title">Хм, мысль ускользнула.</p>
+        <p>Я выбрал: <strong>{guess}</strong>. Но, кажется, это был не он.</p>
 
         {!reaction ? (
           <form className="reveal-form" onSubmit={submitAnswer}>
-            <label htmlFor="real-answer">Кто это был?</label>
+            <label htmlFor="real-answer">Кого ты загадал?</label>
             <div className="reveal-row">
               <input
                 id="real-answer"
                 onChange={(event) => setRealAnswer(event.target.value)}
-                placeholder="Например: Джастин Бибер"
+                placeholder="Например: Гарри Поттер"
                 type="text"
                 value={realAnswer}
               />
-              <button type="submit">Сказать</button>
+              <button type="submit">Показать</button>
             </div>
           </form>
         ) : (
@@ -46,7 +47,7 @@ export default function FailedGuessResult({
       </div>
 
       <button onClick={onRestart} type="button">
-        Играть заново
+        Играть снова
       </button>
     </div>
   );
@@ -57,14 +58,14 @@ function getReaction(guess: string, realAnswer: string) {
   const normalizedAnswer = normalizeText(realAnswer);
 
   if (normalizedGuess === normalizedAnswer) {
-    return 'Подожди, получается я всё-таки угадал. Значит засчитываю победу себе.';
+    return 'Подожди, получается я всё-таки попал в цель. Засчитываю победу Mind Oracle.';
   }
 
   if (isCloseGuess(normalizedGuess, normalizedAnswer)) {
-    return `Я был рядом, но не дожал. Запомню: это был ${realAnswer}.`;
+    return `Я был рядом, но не дожал. Запомню этот след: это был ${realAnswer}.`;
   }
 
-  return `Я не догадался. Хороший персонаж: ${realAnswer}. В следующий раз буду умнее спрашивать.`;
+  return `Красивый выбор: ${realAnswer}. В следующий раз я задам вопросы хитрее.`;
 }
 
 function isCloseGuess(guess: string, answer: string) {
